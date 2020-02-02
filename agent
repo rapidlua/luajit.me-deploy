@@ -1,0 +1,5 @@
+#!/bin/sh
+! /var/deploy/secrets/config
+export DATA_DIR=/var/deploy
+export LOG_DIR=/var/log/deploy
+/usr/bin/nodejs $(dirname $(readlink -f "$0"))/agent.js
