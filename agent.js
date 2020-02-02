@@ -388,4 +388,4 @@ app.use('/staging', proxy(() => 'http://' + state.stagingHost, {
   filter: () => state.stagingHost !== undefined
 }));
 
-app.listen(8000);
+app.listen(8000, 'localhost', function () { console.log('agent ready'); });
