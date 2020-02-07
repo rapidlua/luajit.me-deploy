@@ -224,6 +224,14 @@ async function deploy(env, action, options, onComplete) {
       git.on('close', (code) => resolve(code === 0));
     });
   }
+  function getTerraformEnv() {
+    return {
+      TF_VAR_digitalocean_token: digitalOceanToken,
+      TF_VAR_ssh_key_fingerprint: sshKeyFingerprint,
+      TF_VAR_ssh_private_key_file: sshPrivateKeyFile,
+      TF_VAR_app_version: options.payload ? options.payload.version : ""
+    };
+  }
   function terraformInit() {
     const terraformInitArgs = [ 'init', '-no-color', terraformSrcDir ];
     return new Promise((resolve, reject) => {
@@ -246,12 +254,7 @@ async function deploy(env, action, options, onComplete) {
       logWrite('$ terraform apply\n');
       const terraform = spawn('terraform', terraformApplyArgs, {
         cwd: terraformStateDir, stdio: ['ignore', logFD, logFD],
-        env: Object.assign({}, process.env, {
-          TF_VAR_digitalocean_token: digitalOceanToken,
-          TF_VAR_ssh_key_fingerprint: sshKeyFingerprint,
-          TF_VAR_ssh_private_key_file: sshPrivateKeyFile,
-          TF_VAR_app_version: options.payload.version
-        })
+        env: Object.assign({}, process.env, getTerraformEnv())
       });
       terraform.on('error', reject);
       terraform.on('close', (code) => {
@@ -271,7 +274,8 @@ async function deploy(env, action, options, onComplete) {
     return new Promise((resolve, reject) => {
       logWrite('$ terraform destroy\n');
       const terraform = spawn('terraform', terraformDestroyArgs, {
-        cwd: terraformStateDir, stdio: ['ignore', logFD, logFD]
+        cwd: terraformStateDir, stdio: ['ignore', logFD, logFD],
+        env: Object.assign({}, process.env, getTerraformEnv())
       });
       terraform.on('error', reject);
       terraform.on('close', (code) => {
