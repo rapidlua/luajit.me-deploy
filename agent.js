@@ -414,4 +414,6 @@ app.use('/staging', proxy(() => 'http://' + state.stagingHost, {
   filter: () => state.stagingHost !== undefined
 }));
 
+app.use('/staging', express.static(__dirname + '/staging-placeholder'));
+
 app.listen(8000, 'localhost', function () { console.log('agent ready'); });
