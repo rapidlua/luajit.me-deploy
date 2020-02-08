@@ -264,7 +264,16 @@ async function deploy(env, action, options, onComplete) {
   }
   function terraformOutput() {
     return new Promise((resolve, reject) => {
-      reject(new Error('not implemented'));
+      const terraform = spawn('terraform', ['output', '-json'], {
+        cwd: terraformStateDir, stdio: ['ignore', 'pipe', logFD]
+      });
+      const out = [];
+      terraform.stdout.on('data', buf => out.push(buf));
+      terraform.stdout.on('close', function() {
+        try {
+          resolve(JSON.parse(Buffer.concat(out).toString()));
+        } catch (e) { reject(e); }
+      });
     });
   }
   function terraformDestroy() {
@@ -282,6 +291,16 @@ async function deploy(env, action, options, onComplete) {
         code === 0 ? resolve() : reject(new Error('terraform destroy'));
       });
     });
+  }
+
+  function reconfigure(terraformOutput) {
+    const to = terraformOutput;
+    switch (env) {
+    case 'staging':
+      state.stagingHost = to.staging_ip ? to.staging_ip.value[0] : undefined;
+      break;
+    }
+    persistState();
   }
 
   let logURL;
@@ -317,16 +336,17 @@ async function deploy(env, action, options, onComplete) {
       }
       await terraformInit();
       await terraformApply();
+      reconfigure(await terraformOutput());
       if (env === 'production' && await isSHA1AncestorOfSHA2(staging.sha, options.sha))
         staging.deactivate();
       break;
     case 'deactivate':
       await terraformDestroy();
-      assert(env === 'staging');
-      delete state.stagingHost;
+      reconfigure({});
       break;
     case 'rescale':
       await terraformApply();
+      reconfigure(await terraformOutput());
       break;
     }
 
