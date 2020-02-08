@@ -407,6 +407,8 @@ function secureEqual(a, b) {
   return a.length === b.length && crypto.timingSafeEqual(a, b);
 }
 
+app.use('/deploy', (req, res) => res.redirect('https://github.com/rapidlua/luajit.me/deployments'));
+
 app.use('/staging', proxy(() => 'http://' + state.stagingHost, {
   memoizeHost: false,
   filter: () => state.stagingHost !== undefined
