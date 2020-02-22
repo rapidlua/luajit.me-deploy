@@ -1,3 +1,20 @@
+/* Deployment daemon for luajit.me
+ *
+ *  - Receives notification from GitHub whenever a new deployment is requested;
+ *
+ *  - deploys to staging or production using Terraform configuration in the
+ *    branch being deployed;
+ *
+ *  - updates deployment status on GitHub;
+ *
+ *  - destroys staging as soon as it becomes obsolete;
+ *
+ *  - captures staging's IP address and works as a proxy
+ *    for HTTP requests hitting staging.luajit.me.
+ *
+ * The daemon responds to HTTP requests on localhost:8000.
+ * It is supposed to be deployed behind nginx.
+ */
 const assert       = require('assert');
 const bodyParser   = require('body-parser');
 const crypto       = require('crypto');
